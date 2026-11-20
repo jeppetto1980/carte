@@ -1,5 +1,5 @@
 // Le mie card - funziona offline. Cambia VERSION quando aggiorni index.html.
-const VERSION = "card-v2";
+const VERSION = "card-v3";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
