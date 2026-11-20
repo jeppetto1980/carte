@@ -2500,7 +2500,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   </div>
 </div>
 
-<datalist id="stores"><option value="Arcaplanet"><option value="Bialetti"><option value="Conad"><option value="Coop"><option value="Decathlon"><option value="Esselunga"><option value="Euronics"><option value="GameStop"><option value="Giardineria"><option value="Il Gigante"><option value="IKEA"><option value="Iper"><option value="Kiabi"><option value="La tua card"><option value="Mediaworld"><option value="Mornati Paglia"><option value="Moto abbigliamento"><option value="PittaRosso"><option value="Rigamonti"><option value="Tigros"><option value="Unieuro"></datalist>
+<datalist id="stores"><option value="Arcaplanet"><option value="Bialetti"><option value="Conad"><option value="Coop"><option value="Decathlon"><option value="Esselunga"><option value="Euronics"><option value="GameStop"><option value="Giardineria"><option value="Il Gigante"><option value="IKEA"><option value="Iper"><option value="Kiabi"><option value="La tua card"><option value="Mediaworld"><option value="Mornati Paglia"><option value="Moto abbigliamento"><option value="PittaRosso"><option value="Rigamonti"><option value="Tigros"><option value="Unieuro"><option value="Carrefour"><option value="Lidl"><option value="Eurospin"><option value="Penny"><option value="Pam"><option value="Panorama"><option value="Bennet"><option value="Famila"><option value="Despar"><option value="Iperal"><option value="Unes"><option value="Simply"><option value="Auchan"><option value="Crai"><option value="Sigma"><option value="Lando"><option value="Aldi"><option value="MD"><option value="Tuodì"><option value="Basko"><option value="Gros"><option value="Sidis"><option value="Sephora"><option value="Douglas"><option value="Kiko"><option value="Tigotà"><option value="Acqua & Sapone"><option value="Feltrinelli"><option value="Mondadori"><option value="Giunti"><option value="Leroy Merlin"><option value="Brico"><option value="Bricoman"><option value="OBI"><option value="Bricocenter"><option value="Self"><option value="Maisons du Monde"><option value="Zara"><option value="H&M"><option value="OVS"><option value="Coin"><option value="Upim"><option value="Calzedonia"><option value="Intimissimi"><option value="Tezenis"><option value="Primark"><option value="Benetton"><option value="Piazza Italia"><option value="Terranova"><option value="Bata"><option value="Foot Locker"><option value="Cisalfa"><option value="Sportler"><option value="Trony"><option value="Expert"><option value="Comet"><option value="Maxi Zoo"><option value="Zooplus"><option value="Old Wild West"><option value="Autogrill"><option value="Q8"><option value="Eni"><option value="IP"><option value="Tamoil"><option value="Esso"><option value="Shell"><option value="Trenitalia"><option value="Italo"><option value="Fnac"><option value="Thun"><option value="Flying Tiger"><option value="Jysk"><option value="Mercatone"><option value="Chateau d'Ax"><option value="Poltronesofà"><option value="Grom"><option value="Starbucks"><option value="McDonald's"><option value="Burger King"><option value="Roadhouse"></datalist>
 <div id="qrtmp" style="display:none"></div>
 
 <!-- Fotocamera -->
@@ -2794,8 +2794,63 @@ $("photo").onchange=async e=>{
   $("scanmsg").textContent="Leggo il codice…";
   const r=await decodeFile(f);
   if(r){fill(r.number,r.format);$("scanmsg").textContent="Codice letto ✓ — controlla il numero"}
+  if(!$("fname").value){const nm=await readStoreName(f,m=>$("scanmsg").textContent=m);if(nm)$("fname").value=nm;if(r)$("scanmsg").textContent="Letto ✓ — controlla nome e numero"}
   else $("scanmsg").textContent="Non riesco a leggerlo: scrivi il numero a mano";
 };
+
+/* ---------- lettura del nome negozio (OCR sul telefono) ---------- */
+const STORES=["Arcaplanet", "Bialetti", "Conad", "Coop", "Decathlon", "Esselunga", "Euronics", "GameStop", "Giardineria", "Il Gigante", "IKEA", "Iper", "Kiabi", "La tua card", "Mediaworld", "Mornati Paglia", "Moto abbigliamento", "PittaRosso", "Rigamonti", "Tigros", "Unieuro", "Carrefour", "Lidl", "Eurospin", "Penny", "Pam", "Panorama", "Bennet", "Famila", "Despar", "Iperal", "Unes", "Simply", "Auchan", "Crai", "Sigma", "Lando", "Aldi", "MD", "Tuodì", "Basko", "Gros", "Sidis", "Sephora", "Douglas", "Kiko", "Tigotà", "Acqua & Sapone", "Feltrinelli", "Mondadori", "Giunti", "Leroy Merlin", "Brico", "Bricoman", "OBI", "Bricocenter", "Self", "Maisons du Monde", "Zara", "H&M", "OVS", "Coin", "Upim", "Calzedonia", "Intimissimi", "Tezenis", "Primark", "Benetton", "Piazza Italia", "Terranova", "Bata", "Foot Locker", "Cisalfa", "Sportler", "Trony", "Expert", "Comet", "Maxi Zoo", "Zooplus", "Old Wild West", "Autogrill", "Q8", "Eni", "IP", "Tamoil", "Esso", "Shell", "Trenitalia", "Italo", "Fnac", "Thun", "Flying Tiger", "Jysk", "Mercatone", "Chateau d'Ax", "Poltronesofà", "Grom", "Starbucks", "McDonald's", "Burger King", "Roadhouse"];
+let ocrWorker=null, ocrLoading=null;
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function ensureOCR(onMsg){
+  if(ocrWorker)return ocrWorker;
+  if(!ocrLoading)ocrLoading=(async()=>{
+    onMsg&&onMsg("Preparo la lettura dei nomi (solo la prima volta, serve la rete)…");
+    if(!window.Tesseract)await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+    ocrWorker=await Tesseract.createWorker("eng",1,{langPath:"https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int"});
+    return ocrWorker;
+  })().catch(e=>{ocrLoading=null;throw e});
+  return ocrLoading;
+}
+const norm=t=>(t||"").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g,"");
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const sim=(a,b)=>1-lev(a,b)/Math.max(a.length,b.length);
+const UI_WORDS=["cartefedelta","cartafedelta","indietro","mostra","cassa","modifica","condividi","dettagli","codice","numero","klarna","stocard","punti","offerte","coupon","chiudi","fatto"];
+function guessStore(lines){
+  // 1) un negozio noto, anche con qualche lettera sbagliata
+  let best=null,bs=0;
+  for(const ln of lines){
+    const words=ln.split(/\s+/).filter(Boolean);
+    const grams=new Set([norm(ln)]);
+    for(let i=0;i<words.length;i++)for(let k=1;k<=3&&i+k<=words.length;k++)grams.add(norm(words.slice(i,i+k).join("")));
+    for(const g of grams){if(g.length<2)continue;
+      for(const st of STORES){const n=norm(st);if(n.length<2)continue;
+        const v=g===n?1:(n.length>=4&&g.length>=4?sim(g,n):0);
+        if(v>bs){bs=v;best=st}}}
+  }
+  if(best&&bs>=0.8)return best;
+  // 2) altrimenti la prima riga "da titolo" in alto
+  for(const ln of lines){const t=ln.trim();const n=norm(t);
+    if(n.length<3||/^\d/.test(n)||/\d{4,}/.test(n)||/^\d{1,2}[:.]\d{2}/.test(t))continue;
+    if(UI_WORDS.some(w=>n.includes(w)))continue;
+    if((t.match(/[a-zA-ZÀ-ú]/g)||[]).length<3)continue;
+    return t.replace(/[^\p{L}\p{N}&' .-]/gu,"").trim().replace(/\b\w/g,c=>c.toUpperCase());
+  }
+  return "";
+}
+async function readStoreName(file,onMsg){
+  try{
+    const w=await ensureOCR(onMsg);
+    const bmp=await createImageBitmap(file);
+    const k=Math.min(1,1100/bmp.width),cw=Math.round(bmp.width*k),ch=Math.round(bmp.height*k*0.5);
+    const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;const g=cv.getContext("2d");
+    g.drawImage(bmp,0,0,bmp.width,bmp.height*0.5,0,0,cw,ch);
+    const r=await w.recognize(cv);
+    const lines=(r.data.text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean);
+    return guessStore(lines);
+  }catch(e){return ""}
+}
 
 /* ---------- import multiplo da screenshot (es. da Klarna) ---------- */
 let batch=[], bulkAbort=false;
@@ -2810,10 +2865,12 @@ $("shots").onchange=async e=>{
     $("bprog").textContent=`Leggo ${i+1} di ${files.length}…`;
     const f=files[i];const it={url:URL.createObjectURL(f),name:"",number:"",format:"auto",ok:true};
     const r=await decodeFile(f);if(r){it.number=r.number;it.format=r.format}
+    it.name=await readStoreName(f,m=>$("bprog").textContent=m);
     batch.push(it);addRow(it);
   }
   const bad=batch.filter(b=>!b.number).length;
-  $("bprog").textContent=`Fatto: ${batch.length-bad} codici letti`+(bad?`, ${bad} da scrivere a mano`:"")+". Scrivi il nome del negozio per ognuna.";
+  const nn=batch.filter(b=>!b.name).length;
+  $("bprog").textContent=`Fatto: ${batch.length-bad} codici letti`+(bad?`, ${bad} da scrivere a mano`:"")+(nn?`, ${nn} nomi da completare`:"")+". Controlla nomi e numeri prima di salvare.";
   $("rsave").disabled=false;
 };
 function addRow(it){
