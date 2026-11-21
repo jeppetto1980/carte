@@ -2800,14 +2800,18 @@ $("photo").onchange=async e=>{
 
 /* ---------- lettura del nome negozio (OCR sul telefono) ---------- */
 const STORES=["Arcaplanet", "Bialetti", "Conad", "Coop", "Decathlon", "Esselunga", "Euronics", "GameStop", "Giardineria", "Il Gigante", "IKEA", "Iper", "Kiabi", "La tua card", "Mediaworld", "Mornati Paglia", "Moto abbigliamento", "PittaRosso", "Rigamonti", "Tigros", "Unieuro", "Carrefour", "Lidl", "Eurospin", "Penny", "Pam", "Panorama", "Bennet", "Famila", "Despar", "Iperal", "Unes", "Simply", "Auchan", "Crai", "Sigma", "Lando", "Aldi", "MD", "Tuodì", "Basko", "Gros", "Sidis", "Sephora", "Douglas", "Kiko", "Tigotà", "Acqua & Sapone", "Feltrinelli", "Mondadori", "Giunti", "Leroy Merlin", "Brico", "Bricoman", "OBI", "Bricocenter", "Self", "Maisons du Monde", "Zara", "H&M", "OVS", "Coin", "Upim", "Calzedonia", "Intimissimi", "Tezenis", "Primark", "Benetton", "Piazza Italia", "Terranova", "Bata", "Foot Locker", "Cisalfa", "Sportler", "Trony", "Expert", "Comet", "Maxi Zoo", "Zooplus", "Old Wild West", "Autogrill", "Q8", "Eni", "IP", "Tamoil", "Esso", "Shell", "Trenitalia", "Italo", "Fnac", "Thun", "Flying Tiger", "Jysk", "Mercatone", "Chateau d'Ax", "Poltronesofà", "Grom", "Starbucks", "McDonald's", "Burger King", "Roadhouse"];
-let ocrWorker=null, ocrLoading=null;
+let ocrWorker=null, ocrLoading=null, ocrError="";
+function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,ko)=>setTimeout(()=>ko(new Error(msg)),ms))])}
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
 async function ensureOCR(onMsg){
   if(ocrWorker)return ocrWorker;
   if(!ocrLoading)ocrLoading=(async()=>{
     onMsg&&onMsg("Preparo la lettura dei nomi (solo la prima volta, serve la rete)…");
     if(!window.Tesseract)await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
-    ocrWorker=await Tesseract.createWorker("eng",1,{langPath:"https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int"});
+    ocrWorker=await withTimeout(Tesseract.createWorker("eng",1,{
+      workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+      corePath:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js",
+      langPath:"https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int"}),90000,"download del motore troppo lento");
     return ocrWorker;
   })().catch(e=>{ocrLoading=null;throw e});
   return ocrLoading;
@@ -2818,6 +2822,7 @@ function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let 
 const sim=(a,b)=>1-lev(a,b)/Math.max(a.length,b.length);
 const UI_WORDS=["cartefedelta","cartafedelta","indietro","mostra","cassa","modifica","condividi","dettagli","codice","numero","klarna","stocard","punti","offerte","coupon","chiudi","fatto"];
 function guessStore(lines){
+  lines=lines.map(l=>l.replace(/\bdettagli\b/ig,"").replace(/^[^\p{L}\p{N}]+/u,"").replace(/[^\p{L}\p{N}]+$/u,"").trim()).filter(Boolean);
   // 1) un negozio noto, anche con qualche lettera sbagliata
   let best=null,bs=0;
   for(const ln of lines){
@@ -2843,13 +2848,14 @@ async function readStoreName(file,onMsg){
   try{
     const w=await ensureOCR(onMsg);
     const bmp=await createImageBitmap(file);
-    const k=Math.min(1,1100/bmp.width),cw=Math.round(bmp.width*k),ch=Math.round(bmp.height*k*0.5);
+    const k=Math.min(1,1100/bmp.width),cw=Math.round(bmp.width*k),ch=Math.round(bmp.height*k*0.4);
     const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;const g=cv.getContext("2d");
-    g.drawImage(bmp,0,0,bmp.width,bmp.height*0.5,0,0,cw,ch);
-    const r=await w.recognize(cv);
+    g.filter="grayscale(1)";g.drawImage(bmp,0,0,bmp.width,bmp.height*0.4,0,0,cw,ch);
+    const url=cv.toDataURL("image/png");
+    const r=await withTimeout(w.recognize(url),45000,"lettura troppo lenta");
     const lines=(r.data.text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean);
-    return guessStore(lines);
-  }catch(e){return ""}
+    ocrError="";return guessStore(lines);
+  }catch(e){ocrError=(e&&(e.message||e.toString()))||"errore sconosciuto";return ""}
 }
 
 /* ---------- import multiplo da screenshot (es. da Klarna) ---------- */
@@ -2870,7 +2876,7 @@ $("shots").onchange=async e=>{
   }
   const bad=batch.filter(b=>!b.number).length;
   const nn=batch.filter(b=>!b.name).length;
-  $("bprog").textContent=`Fatto: ${batch.length-bad} codici letti`+(bad?`, ${bad} da scrivere a mano`:"")+(nn?`, ${nn} nomi da completare`:"")+". Controlla nomi e numeri prima di salvare.";
+  $("bprog").textContent=`Fatto: ${batch.length-bad} codici letti`+(bad?`, ${bad} da scrivere a mano`:"")+(nn?`, ${nn} nomi da completare`:"")+". Controlla nomi e numeri prima di salvare."+(ocrError?` (Lettura nomi non riuscita: ${ocrError})`:"");
   $("rsave").disabled=false;
 };
 function addRow(it){
