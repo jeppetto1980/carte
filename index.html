@@ -2799,7 +2799,7 @@ $("photo").onchange=async e=>{
 };
 
 /* ---------- lettura del nome negozio (OCR sul telefono) ---------- */
-const STORES=["Arcaplanet", "Bialetti", "Conad", "Coop", "Decathlon", "Esselunga", "Euronics", "GameStop", "Giardineria", "Il Gigante", "IKEA", "Iper", "Kiabi", "La tua card", "Mediaworld", "Mornati Paglia", "Moto abbigliamento", "PittaRosso", "Rigamonti", "Tigros", "Unieuro", "Carrefour", "Lidl", "Eurospin", "Penny", "Pam", "Panorama", "Bennet", "Famila", "Despar", "Iperal", "Unes", "Simply", "Auchan", "Crai", "Sigma", "Lando", "Aldi", "MD", "Tuodì", "Basko", "Gros", "Sidis", "Sephora", "Douglas", "Kiko", "Tigotà", "Acqua & Sapone", "Feltrinelli", "Mondadori", "Giunti", "Leroy Merlin", "Brico", "Bricoman", "OBI", "Bricocenter", "Self", "Maisons du Monde", "Zara", "H&M", "OVS", "Coin", "Upim", "Calzedonia", "Intimissimi", "Tezenis", "Primark", "Benetton", "Piazza Italia", "Terranova", "Bata", "Foot Locker", "Cisalfa", "Sportler", "Trony", "Expert", "Comet", "Maxi Zoo", "Zooplus", "Old Wild West", "Autogrill", "Q8", "Eni", "IP", "Tamoil", "Esso", "Shell", "Trenitalia", "Italo", "Fnac", "Thun", "Flying Tiger", "Jysk", "Mercatone", "Chateau d'Ax", "Poltronesofà", "Grom", "Starbucks", "McDonald's", "Burger King", "Roadhouse"];
+const STORES=["IKEA Family","Sorelle Ramonda","Arcaplanet", "Bialetti", "Conad", "Coop", "Decathlon", "Esselunga", "Euronics", "GameStop", "Giardineria", "Il Gigante", "IKEA", "Iper", "Kiabi", "La tua card", "Mediaworld", "Mornati Paglia", "Moto abbigliamento", "PittaRosso", "Rigamonti", "Tigros", "Unieuro", "Carrefour", "Lidl", "Eurospin", "Penny", "Pam", "Panorama", "Bennet", "Famila", "Despar", "Iperal", "Unes", "Simply", "Auchan", "Crai", "Sigma", "Lando", "Aldi", "MD", "Tuodì", "Basko", "Gros", "Sidis", "Sephora", "Douglas", "Kiko", "Tigotà", "Acqua & Sapone", "Feltrinelli", "Mondadori", "Giunti", "Leroy Merlin", "Brico", "Bricoman", "OBI", "Bricocenter", "Self", "Maisons du Monde", "Zara", "H&M", "OVS", "Coin", "Upim", "Calzedonia", "Intimissimi", "Tezenis", "Primark", "Benetton", "Piazza Italia", "Terranova", "Bata", "Foot Locker", "Cisalfa", "Sportler", "Trony", "Expert", "Comet", "Maxi Zoo", "Zooplus", "Old Wild West", "Autogrill", "Q8", "Eni", "IP", "Tamoil", "Esso", "Shell", "Trenitalia", "Italo", "Fnac", "Thun", "Flying Tiger", "Jysk", "Mercatone", "Chateau d'Ax", "Poltronesofà", "Grom", "Starbucks", "McDonald's", "Burger King", "Roadhouse"];
 let ocrWorker=null, ocrLoading=null, ocrError="";
 function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,ko)=>setTimeout(()=>ko(new Error(msg)),ms))])}
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
@@ -2816,12 +2816,13 @@ async function ensureOCR(onMsg){
   })().catch(e=>{ocrLoading=null;throw e});
   return ocrLoading;
 }
-const norm=t=>(t||"").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g,"");
+const norm=t=>(t||"").replace(/\|/g,"i").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g,"");
 function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
 const sim=(a,b)=>1-lev(a,b)/Math.max(a.length,b.length);
 const UI_WORDS=["cartefedelta","cartafedelta","indietro","mostra","cassa","modifica","condividi","dettagli","codice","numero","klarna","stocard","punti","offerte","coupon","chiudi","fatto"];
-function guessStore(lines){
+function guessStore(lines){return guessStoreScored(lines).name}
+function guessStoreScored(lines){
   lines=lines.map(l=>l.replace(/\bdettagli\b/ig,"").replace(/^[^\p{L}\p{N}]+/u,"").replace(/[^\p{L}\p{N}]+$/u,"").trim()).filter(Boolean);
   // 1) un negozio noto, anche con qualche lettera sbagliata
   let best=null,bs=0;
@@ -2831,30 +2832,71 @@ function guessStore(lines){
     for(let i=0;i<words.length;i++)for(let k=1;k<=3&&i+k<=words.length;k++)grams.add(norm(words.slice(i,i+k).join("")));
     for(const g of grams){if(g.length<2)continue;
       for(const st of STORES){const n=norm(st);if(n.length<2)continue;
-        const v=g===n?1:(n.length>=4&&g.length>=4?sim(g,n):0);
+        let v=g===n?1:(n.length>=4&&g.length>=4?sim(g,n):0);
+        if(v<.85&&g.length>=5&&n.length>g.length&&(n.endsWith(g)||n.startsWith(g))&&g.length/n.length>=.6)v=.85;
         if(v>bs){bs=v;best=st}}}
   }
-  if(best&&bs>=0.8)return best;
+  if(best&&bs>=0.8)return {name:best,score:bs};
   // 2) altrimenti la prima riga "da titolo" in alto
   for(const ln of lines){const t=ln.trim();const n=norm(t);
     if(n.length<3||/^\d/.test(n)||/\d{4,}/.test(n)||/^\d{1,2}[:.]\d{2}/.test(t))continue;
     if(UI_WORDS.some(w=>n.includes(w)))continue;
     if((t.match(/[a-zA-ZÀ-ú]/g)||[]).length<3)continue;
-    return t.replace(/[^\p{L}\p{N}&' .-]/gu,"").trim().replace(/\b\w/g,c=>c.toUpperCase());
+    return {name:t.replace(/[^\p{L}\p{N}&' .-]/gu,"").trim().replace(/\b\w/g,c=>c.toUpperCase()),score:.5};
   }
-  return "";
+  return {name:"",score:0};
+}
+// prepara una zona dell'immagine: testo nero su fondo bianco, qualunque siano i colori originali
+function binarize(bmp,sx,sy,sw,sh,targetH){
+  const k=targetH/sh,cw=Math.round(sw*k),ch=Math.round(sh*k);
+  const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;const g=cv.getContext("2d");
+  g.imageSmoothingQuality="high";g.drawImage(bmp,sx,sy,sw,sh,0,0,cw,ch);
+  const id=g.getImageData(0,0,cw,ch),d=id.data,n=cw*ch;
+  // colore di fondo = mediana per canale
+  const med=c=>{const h=new Array(256).fill(0);for(let i=0;i<n;i++)h[d[i*4+c]]++;let acc=0;for(let v=0;v<256;v++){acc+=h[v];if(acc>=n/2)return v}return 0};
+  const bg=[med(0),med(1),med(2)];
+  const D=new Uint8Array(n),hist=new Array(256).fill(0);
+  for(let i=0;i<n;i++){const v=Math.max(Math.abs(d[i*4]-bg[0]),Math.abs(d[i*4+1]-bg[1]),Math.abs(d[i*4+2]-bg[2]));D[i]=v;hist[v]++}
+  // soglia di Otsu sulla distanza dal fondo
+  let sum=0;for(let t=0;t<256;t++)sum+=t*hist[t];let sB=0,wB=0,best=0,th=60;
+  for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=t*hist[t];
+    const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;th=t}}
+  th=Math.max(th,40);
+  for(let i=0;i<n;i++){const c=D[i]>th?0:255;d[i*4]=d[i*4+1]=d[i*4+2]=c;d[i*4+3]=255}
+  g.putImageData(id,0,0);return {url:cv.toDataURL("image/png"),k,bg};
+}
+function px(bmp,x,y){const c=document.createElement("canvas");c.width=c.height=1;const g=c.getContext("2d");g.drawImage(bmp,x,y,1,1,0,0,1,1);return [...g.getImageData(0,0,1,1).data]}
+function wordsOf(data){
+  const out=[];
+  (data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach((l,li)=>(l.words||[]).forEach(w=>out.push({t:w.text,b:w.bbox,line:out.length?null:0,L:l})))));
+  return out;
 }
 async function readStoreName(file,onMsg){
   try{
     const w=await ensureOCR(onMsg);
-    const bmp=await createImageBitmap(file);
-    const k=Math.min(1,1100/bmp.width),cw=Math.round(bmp.width*k),ch=Math.round(bmp.height*k*0.4);
-    const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;const g=cv.getContext("2d");
-    g.filter="grayscale(1)";g.drawImage(bmp,0,0,bmp.width,bmp.height*0.4,0,0,cw,ch);
-    const url=cv.toDataURL("image/png");
-    const r=await withTimeout(w.recognize(url),45000,"lettura troppo lenta");
-    const lines=(r.data.text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean);
-    ocrError="";return guessStore(lines);
+    const bmp=await createImageBitmap(file);const W=bmp.width,H=bmp.height;
+    // 1) fascia del nome come nelle card Klarna
+    // legge la fascia del nome due volte: intera e saltando il cerchietto del logo, poi tiene la lettura migliore
+    const readBand=async(fx)=>{
+      const sx=Math.round(W*fx),sy=Math.round(H*.153),sw=Math.round(W*.73)-sx,sh=Math.round(H*.064);
+      const band=binarize(bmp,sx,sy,sw,sh,150);
+      const r=await withTimeout(w.recognize(band.url,{},{blocks:true,text:true}),45000,"lettura troppo lenta");
+      const lines=[];
+      (r.data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>{
+        const kept=(l.words||[]).filter(x=>x.confidence>5).map(x=>x.text);if(kept.length)lines.push(kept.join(" "))})));
+      return guessStoreScored(lines);
+    };
+    const A=await readBand(.065),B=await readBand(.185);
+    let pick=A.score>=B.score?A:B;
+    if(A.score<.8&&B.score<.8)pick=(B.name.length>=4?B:A);
+    let name=pick.name;
+    // 2) se non trova niente, legge tutta la parte alta
+    if(!name){
+      const top=binarize(bmp,0,0,W,Math.round(H*.4),900);
+      const r2=await withTimeout(w.recognize(top.url),45000,"lettura troppo lenta");
+      name=guessStore((r2.data.text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean));
+    }
+    ocrError="";return name;
   }catch(e){ocrError=(e&&(e.message||e.toString()))||"errore sconosciuto";return ""}
 }
 
