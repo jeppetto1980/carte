@@ -2665,7 +2665,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <button class="scan bulk" id="bkimp">⬇️ Importa backup</button>
     <input id="bkfile" type="file" accept="application/json,.json" hidden>
     <div id="bkmsg" class="note" style="margin-top:12px"></div>
-    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 13</p>
+    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 14</p>
   </div>
 </div>
 
@@ -3352,19 +3352,25 @@ function matchCard(tags){
 function clearNear(){$("near").style.display="none";document.querySelectorAll(".card.near").forEach(e=>e.classList.remove("near"))}
 let nearBusy=false,geoDiag="";
 const OSM_SERVERS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+async function tfetch(url,ms,label){
+  const t0=performance.now(),ctl=("AbortController" in window)?new AbortController():null;
+  const timer=setTimeout(()=>ctl&&ctl.abort(),ms);
+  try{const r=await fetch(url,ctl?{signal:ctl.signal,cache:"no-store"}:{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}
+  catch(e){const sec=((performance.now()-t0)/1000).toFixed(1);throw new Error(`${label}: ${e.name==="AbortError"?"nessuna risposta":(e.message||e.name)} dopo ${sec}s`)}
+  finally{clearTimeout(timer)}
+}
 async function osmQuery(q){
   let last;
   for(const u of OSM_SERVERS){
-    try{const r=await withTimeout(fetch(u+"?data="+encodeURIComponent(q)),9000,"timeout");
-      if(!r.ok)throw new Error("HTTP "+r.status);return (await r.json()).elements||[]}catch(e){last=e}
+    try{return (await tfetch(u+"?data="+encodeURIComponent(q),15000,new URL(u).host)).elements||[]}catch(e){last=e}
   }
-  throw new Error("mappa non raggiungibile ("+(last&&last.message||"errore")+")");
+  throw last||new Error("OpenStreetMap non raggiungibile");
 }
 // seconda fonte, di solito molto più veloce: Photon (motore di ricerca su dati OpenStreetMap)
 async function photonQuery(la,lo,radKm){
   const base=`https://photon.komoot.io/reverse?lat=${la}&lon=${lo}&limit=30&radius=${radKm}`;
-  const one=async tag=>{const r=await withTimeout(fetch(base+"&osm_tag="+tag),7000,"timeout");if(!r.ok)throw new Error("HTTP "+r.status);
-    return ((await r.json()).features||[]).map(f=>({t:{name:f.properties?.name,brand:f.properties?.brand||f.properties?.extent&&undefined},la:f.geometry?.coordinates?.[1],lo:f.geometry?.coordinates?.[0]})).filter(e=>e.la!=null&&e.t.name)};
+  const one=async tag=>{const j=await tfetch(base+"&osm_tag="+tag,15000,"Photon");
+    return (j.features||[]).map(f=>({t:{name:f.properties?.name,brand:f.properties?.brand||f.properties?.extent&&undefined},la:f.geometry?.coordinates?.[1],lo:f.geometry?.coordinates?.[0]})).filter(e=>e.la!=null&&e.t.name)};
   const parts=await Promise.allSettled([one("shop"),one("amenity")]);
   const ok=parts.filter(p=>p.status==="fulfilled").flatMap(p=>p.value);
   if(!ok.length&&parts.every(p=>p.status==="rejected"))throw parts[0].reason;
