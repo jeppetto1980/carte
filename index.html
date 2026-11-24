@@ -2665,7 +2665,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <button class="scan bulk" id="bkimp">⬇️ Importa backup</button>
     <input id="bkfile" type="file" accept="application/json,.json" hidden>
     <div id="bkmsg" class="note" style="margin-top:12px"></div>
-    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 14</p>
+    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 15</p>
   </div>
 </div>
 
@@ -3392,27 +3392,31 @@ async function suggestNearby(manual){
     if(!list){
       // le due fonti partono insieme; se la prima trova già la card non aspetto la seconda
       const q=`[out:json][timeout:8];(nwr(around:${rad},${la},${lo})["shop"];nwr(around:${rad},${la},${lo})["amenity"~"fuel|pharmacy|fast_food|cafe|restaurant"];);out tags center 120;`;
-      const pPh=photonQuery(la,lo,(rad/1000).toFixed(2)).then(v=>{src.push("Photon");return v},e=>{errs.push("Photon: "+(e.message||e));return []});
+      const pPh=photonQuery(la,lo,(rad/1000).toFixed(2)).then(v=>{src.push("Photon");return v},e=>{errs.push(String(e.message||e));return []});
       const pOv=osmQuery(q).then(v=>{src.push("OpenStreetMap");return v.map(e=>({t:e.tags||{},la:e.lat??e.center?.lat,lo:e.lon??e.center?.lon})).filter(e=>e.la!=null)},e=>{errs.push(String(e.message||e));return []});
       const ph=await pPh;
       const hit=ph.some(e=>matchCard(e.t)&&distM(la,lo,e.la,e.lo)<=rad);
       const ov=hit?[]:await pOv;
       list=[...ph,...ov];
-      if(!list.length)throw new Error(errs.join(" · ")||"nessun negozio trovato");
+      // errore solo se nessuna delle due fonti ha risposto; se rispondono ma non c'è nulla, è un risultato normale
+      if(!list.length&&!src.length)throw new Error(errs.join(" · ")||"mappe non raggiungibili");
       try{sessionStorage.setItem(key,JSON.stringify(list))}catch(_){}
     }
     list=list.filter(e=>distM(la,lo,e.la,e.lo)<=rad*1.2);
     let best=null,bd=1e9;
     for(const e of list){const c=matchCard(e.t);if(!c)continue;const d=distM(la,lo,e.la,e.lo);if(d<bd){bd=d;best={c,d}}}
     const names=list.map(e=>({n:e.t.name||e.t.brand,d:distM(la,lo,e.la,e.lo)})).filter(x=>x.n).sort((a,b)=>a.d-b.d).slice(0,6).map(x=>`${x.n} (${Math.round(x.d)} m)`);
-    geoDiag=`Precisione ±${Math.round(acc)} m · ${list.length} negozi trovati entro ${rad} m`+(src.length?` (fonte: ${src.join(" + ")})`:"")+(names.length?`\nPiù vicini: ${names.join(", ")}`:"");
-    if(best){showNear(best.c,best.d);geoDiag+=`\n✓ Card suggerita: ${best.c.name}`}
-    else geoDiag+="\nNessuno corrisponde ai nomi delle tue card.";
+    if(!list.length)geoDiag=`Non ho rilevato negozi nelle vicinanze (posizione precisa a ±${Math.round(acc)} m).`;
+    else{
+      geoDiag=`Ho trovato ${list.length===1?"1 negozio":list.length+" negozi"} entro ${rad} m (posizione precisa a ±${Math.round(acc)} m)`+(names.length?`\nPiù vicini: ${names.join(", ")}`:"");
+      geoDiag+=best?`\n✓ Card suggerita: ${best.c.name}`:"\nNessuno di questi è tra le tue card.";
+    }
+    if(best)showNear(best.c,best.d);
     if(manual)setDiag(geoDiag);
   }catch(e){
     if(e&&e.code===1&&!manual){try{localStorage.setItem(GEO_KEY,"0")}catch(_){}$("geoOn").checked=false}
     geoDiag=e&&e.code===1?"Permesso posizione negato: abilitalo in Impostazioni iPhone → Privacy → Localizzazione → Siti web di Safari.":
-      e&&e.code?"Non riesco a trovare la posizione (GPS non disponibile qui dentro?).":"Errore: "+(e&&e.message||e);
+      e&&e.code?"Non riesco a trovare la posizione (GPS non disponibile qui dentro?).":"Non riesco a contattare le mappe: "+(e&&e.message||e)+". Riprova tra poco.";
     if(manual)setDiag(geoDiag);
   }finally{nearBusy=false}
 }
