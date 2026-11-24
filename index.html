@@ -2656,6 +2656,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <h3><span>Impostazioni</span><button id="mclose">Chiudi</button></h3>
     <h4>📍 Card giusta al negozio giusto</h4>
     <label class="switch"><span>Suggerisci la card quando sono in un negozio</span><input type="checkbox" id="geoOn"></label>
+    <button class="scan" id="geotest">📍 Prova adesso: dove sono?</button>
+    <p class="note" id="geodiag" style="margin-top:10px;white-space:pre-line"></p>
     <p class="note" id="geonote">Quando apri l'app, se sei dentro o davanti a un negozio di cui hai la card, te la propone e la fa lampeggiare. La posizione resta sul telefono: viene usata solo per chiedere a OpenStreetMap quali negozi ci sono nei dintorni.</p>
     <h4>💾 Backup</h4>
     <p class="note">Le card sono salvate solo su questo telefono. Fai un backup ogni tanto e salvalo in File o iCloud Drive: ti serve se cambi telefono o cancelli l'app.</p>
@@ -3283,7 +3285,7 @@ async function shrinkImg(file){
 }
 
 /* ---------- backup ---------- */
-$("menubtn").onclick=()=>{$("bkmsg").textContent=cards.length?`${cards.length} card salvate su questo telefono.`:"";$("menu").classList.add("on")};
+$("menubtn").onclick=()=>{setDiag(geoDiag?("Ultimo controllo: "+geoDiag):"");$("bkmsg").textContent=cards.length?`${cards.length} card salvate su questo telefono.`:"";$("menu").classList.add("on")};
 $("mclose").onclick=()=>$("menu").classList.remove("on");
 $("menu").onclick=e=>{if(e.target.id==="menu")$("menu").classList.remove("on")};
 $("bkexp").onclick=async()=>{
@@ -3347,30 +3349,50 @@ function matchCard(tags){
   return best;
 }
 function clearNear(){$("near").style.display="none";document.querySelectorAll(".card.near").forEach(e=>e.classList.remove("near"))}
-let nearBusy=false;
+let nearBusy=false,geoDiag="";
+const OSM_SERVERS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+async function osmQuery(q){
+  let last;
+  for(const u of OSM_SERVERS){
+    try{const r=await withTimeout(fetch(u,{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}}),12000,"timeout");
+      if(!r.ok)throw new Error("HTTP "+r.status);return (await r.json()).elements||[]}catch(e){last=e}
+  }
+  throw new Error("mappa non raggiungibile ("+(last&&last.message||"errore")+")");
+}
+function getPos(high){return new Promise((ok,ko)=>navigator.geolocation.getCurrentPosition(ok,ko,{enableHighAccuracy:high,timeout:high?10000:8000,maximumAge:30000}))}
 async function suggestNearby(manual){
-  if(nearBusy||!cards.length||!("geolocation" in navigator))return;
+  if(nearBusy||!("geolocation" in navigator))return;
+  if(!cards.length){if(manual)setDiag("Non hai ancora card salvate.");return}
   if(!manual&&!geoEnabled())return;nearBusy=true;
+  if(manual)setDiag("Cerco la posizione…");
   try{
-    const pos=await new Promise((ok,ko)=>navigator.geolocation.getCurrentPosition(ok,ko,{enableHighAccuracy:true,timeout:8000,maximumAge:60000}));
+    let pos;try{pos=await getPos(true)}catch(e){if(e&&e.code===1)throw e;pos=await getPos(false)}
     const {latitude:la,longitude:lo,accuracy:acc}=pos.coords;
-    const rad=Math.min(250,Math.max(80,acc||80));
-    const key="osm:"+la.toFixed(3)+","+lo.toFixed(3);
-    let els=null;try{els=JSON.parse(sessionStorage.getItem(key))}catch(_){}
-    if(!els){
-      const q=`[out:json][timeout:10];(nwr(around:${Math.round(rad)},${la},${lo})["shop"];nwr(around:${Math.round(rad)},${la},${lo})["amenity"~"fuel|pharmacy|fast_food|cafe|restaurant"];);out tags center 80;`;
-      const r=await withTimeout(fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}}),12000,"timeout");
-      els=((await r.json()).elements||[]).map(e=>({t:e.tags||{},la:e.lat??e.center?.lat,lo:e.lon??e.center?.lon}));
-      try{sessionStorage.setItem(key,JSON.stringify(els))}catch(_){}
+    const rad=Math.round(Math.min(400,Math.max(150,(acc||100)*1.5)));
+    if(manual)setDiag(`Posizione trovata (precisione ±${Math.round(acc)} m). Cerco i negozi nel raggio di ${rad} m…`);
+    const key="osm2:"+la.toFixed(3)+","+lo.toFixed(3)+":"+rad;
+    let list=null;try{list=JSON.parse(sessionStorage.getItem(key))}catch(_){}
+    if(!list){
+      const q=`[out:json][timeout:10];(nwr(around:${rad},${la},${lo})["shop"];nwr(around:${rad},${la},${lo})["amenity"~"fuel|pharmacy|fast_food|cafe|restaurant"];);out tags center 120;`;
+      list=(await osmQuery(q)).map(e=>({t:e.tags||{},la:e.lat??e.center?.lat,lo:e.lon??e.center?.lon})).filter(e=>e.la!=null);
+      if(list.length)try{sessionStorage.setItem(key,JSON.stringify(list))}catch(_){}
     }
     let best=null,bd=1e9;
-    for(const e of els){const c=matchCard(e.t);if(!c||e.la==null)continue;const d=distM(la,lo,e.la,e.lo);if(d<bd){bd=d;best={c,d,label:e.t.name||e.t.brand}}}
-    if(best)showNear(best.c,best.d);else if(manual)toast("Nessun negozio delle tue card qui vicino");
+    for(const e of list){const c=matchCard(e.t);if(!c)continue;const d=distM(la,lo,e.la,e.lo);if(d<bd){bd=d;best={c,d}}}
+    const names=list.map(e=>({n:e.t.name||e.t.brand,d:distM(la,lo,e.la,e.lo)})).filter(x=>x.n).sort((a,b)=>a.d-b.d).slice(0,6).map(x=>`${x.n} (${Math.round(x.d)} m)`);
+    geoDiag=`Precisione ±${Math.round(acc)} m · ${list.length} negozi trovati entro ${rad} m`+(names.length?`\nPiù vicini: ${names.join(", ")}`:"");
+    if(best){showNear(best.c,best.d);geoDiag+=`\n✓ Card suggerita: ${best.c.name}`}
+    else geoDiag+="\nNessuno corrisponde ai nomi delle tue card.";
+    if(manual)setDiag(geoDiag);
   }catch(e){
     if(e&&e.code===1&&!manual){try{localStorage.setItem(GEO_KEY,"0")}catch(_){}$("geoOn").checked=false}
-    if(manual){const m=e&&e.code===1?"Consenti la posizione per questa app nelle impostazioni":"Non riesco a trovare la posizione";toast(m)}
+    geoDiag=e&&e.code===1?"Permesso posizione negato: abilitalo in Impostazioni iPhone → Privacy → Localizzazione → Siti web di Safari.":
+      e&&e.code?"Non riesco a trovare la posizione (GPS non disponibile qui dentro?).":"Errore: "+(e&&e.message||e);
+    if(manual)setDiag(geoDiag);
   }finally{nearBusy=false}
 }
+function setDiag(t){$("geodiag").textContent=t}
+$("geotest").onclick=()=>{$("geoOn").checked=true;try{localStorage.setItem(GEO_KEY,"1")}catch(_){}suggestNearby(true)};
 function showNear(c,d){
   clearNear();const b=$("near");
   b.innerHTML='<div class="mini card"></div><div class="tx"></div><span class="go">Apri</span>';
