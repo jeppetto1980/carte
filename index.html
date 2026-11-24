@@ -3329,7 +3329,8 @@ function playIntro(){
 
 /* ---------- card giusta al negozio giusto (posizione + OpenStreetMap) ---------- */
 const GEO_KEY="geoSuggest";
-const geoEnabled=()=>{try{return localStorage.getItem(GEO_KEY)==="1"}catch(_){return false}};
+// attivo di default: alla prima apertura il telefono chiede il permesso; se lo neghi si spegne da solo
+const geoEnabled=()=>{try{return localStorage.getItem(GEO_KEY)!=="0"}catch(_){return true}};
 $("geoOn").checked=geoEnabled();
 $("geoOn").onchange=e=>{
   try{localStorage.setItem(GEO_KEY,e.target.checked?"1":"0")}catch(_){}
@@ -3366,6 +3367,7 @@ async function suggestNearby(manual){
     for(const e of els){const c=matchCard(e.t);if(!c||e.la==null)continue;const d=distM(la,lo,e.la,e.lo);if(d<bd){bd=d;best={c,d,label:e.t.name||e.t.brand}}}
     if(best)showNear(best.c,best.d);else if(manual)toast("Nessun negozio delle tue card qui vicino");
   }catch(e){
+    if(e&&e.code===1&&!manual){try{localStorage.setItem(GEO_KEY,"0")}catch(_){}$("geoOn").checked=false}
     if(manual){const m=e&&e.code===1?"Consenti la posizione per questa app nelle impostazioni":"Non riesco a trovare la posizione";toast(m)}
   }finally{nearBusy=false}
 }
