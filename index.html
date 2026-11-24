@@ -2347,7 +2347,10 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   @media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
   .card{aspect-ratio:1.586;border-radius:var(--r);padding:14px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;position:relative;overflow:hidden;
     box-shadow:0 1px 2px rgba(20,25,50,.06),0 6px 12px -4px rgba(20,25,50,.10),0 22px 34px -14px rgba(20,25,60,.30),0 40px 60px -30px rgba(40,50,110,.22),inset 0 0 0 1px rgba(0,0,0,.04);transition:transform .18s cubic-bezier(.3,.7,.4,1.4);will-change:transform;transform-style:preserve-3d}
-  .grid .card{animation:float 6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -0.7s)}
+  .grid .card{animation:float 6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -0.7s);
+    transform:perspective(800px) translate3d(calc(var(--mx,0) * var(--d,1) * -7px),calc(var(--my,0) * var(--d,1) * -7px),0) rotateX(calc(var(--my,0) * -7deg)) rotateY(calc(var(--mx,0) * 9deg))}
+  html.motion .grid .card{transition:transform .08s linear}
+  html.motion .card::before{background:linear-gradient(calc(135deg + var(--mx,0) * 40deg),rgba(255,255,255,calc(.22 + var(--my,0) * .12)) 0%,rgba(255,255,255,.04) 32%,transparent 50%,rgba(0,0,0,.10) 100%)}
   @keyframes float{0%,100%{translate:0 0}50%{translate:0 -3px}}
   @media(prefers-reduced-motion:reduce){.grid .card{animation:none}}
   .card::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
@@ -2654,6 +2657,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
 <div id="menu" class="ov" style="background:rgba(20,22,40,.28);justify-content:flex-end">
   <div class="sheet">
     <h3><span>Impostazioni</span><button id="mclose">Chiudi</button></h3>
+    <h4>✨ Effetti</h4>
+    <label class="switch"><span>Le card seguono il movimento del telefono</span><input type="checkbox" id="motOn"></label>
     <h4>📍 Card giusta al negozio giusto</h4>
     <label class="switch"><span>Suggerisci la card quando sono in un negozio</span><input type="checkbox" id="geoOn"></label>
     <button class="scan" id="geotest">📍 Prova adesso: dove sono?</button>
@@ -2665,7 +2670,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <button class="scan bulk" id="bkimp">⬇️ Importa backup</button>
     <input id="bkfile" type="file" accept="application/json,.json" hidden>
     <div id="bkmsg" class="note" style="margin-top:12px"></div>
-    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 15</p>
+    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 16</p>
   </div>
 </div>
 
@@ -2797,7 +2802,7 @@ function render(opts={}){
   const vis=new Set();
   const place=(grid,list)=>{list.forEach(c=>{const t=tileFor(c);vis.add(c.id);grid.appendChild(t)})};
   place($("gtop"),top);place($("grid"),rest);
-  let gi=0;[...$("gtop").children,...$("grid").children].forEach(e=>e.style.setProperty("--i",gi++));
+  let gi=0;[...$("gtop").children,...$("grid").children].forEach(e=>{e.style.setProperty("--i",gi);e.style.setProperty("--d",(0.6+((gi*37)%10)/12).toFixed(2));gi++});
   els.forEach((e,id)=>{if(!vis.has(id)){e.remove();if(!cards.some(c=>c.id===id))els.delete(id)}});
   $("secTop").style.display=top.length?"flex":"none";$("secAll").style.display=top.length&&rest.length?"flex":"none";
   $("search").style.display=cards.length>6?"block":"none";
@@ -3310,6 +3315,41 @@ $("bkfile").onchange=async e=>{
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("big").classList.remove("on");closeCard();stopCam();$("edit").classList.remove("on");$("menu").classList.remove("on")}});
+/* ---------- card che "galleggiano" seguendo il movimento del telefono ---------- */
+const MOT_KEY="motionFx";
+const motionOn=()=>{try{return localStorage.getItem(MOT_KEY)!=="0"}catch(_){return true}};
+let motBase=null,motX=0,motY=0,motRaf=0,motListening=false;
+function onOrient(e){
+  if(e.beta==null||e.gamma==null)return;
+  const b=e.beta,g=e.gamma;
+  if(!motBase)motBase={b,g};
+  motBase.b+=(b-motBase.b)*.015;motBase.g+=(g-motBase.g)*.015; // si ricalibra piano: conta il movimento, non la posizione
+  const tx=Math.max(-1,Math.min(1,(g-motBase.g)/22)),ty=Math.max(-1,Math.min(1,(b-motBase.b)/22));
+  motX+=(tx-motX)*.25;motY+=(ty-motY)*.25;
+  if(!motRaf)motRaf=requestAnimationFrame(()=>{motRaf=0;const h=document.documentElement.style;h.setProperty("--mx",motX.toFixed(3));h.setProperty("--my",motY.toFixed(3))});
+}
+function startMotion(){
+  if(RM||motListening||!motionOn()||!("DeviceOrientationEvent" in window))return;
+  addEventListener("deviceorientation",onOrient);motListening=true;document.documentElement.classList.add("motion");
+}
+function stopMotion(){removeEventListener("deviceorientation",onOrient);motListening=false;motBase=null;
+  document.documentElement.classList.remove("motion");document.documentElement.style.setProperty("--mx",0);document.documentElement.style.setProperty("--my",0)}
+async function askMotion(){
+  // su iPhone il permesso si può chiedere solo dopo un tocco
+  if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){
+    try{const r=await DeviceOrientationEvent.requestPermission();if(r==="granted")startMotion();else{try{localStorage.setItem(MOT_KEY,"0")}catch(_){}$("motOn").checked=false}}catch(_){}
+  }else startMotion();
+}
+$("motOn").checked=motionOn()&&!RM;
+$("motOn").onchange=e=>{try{localStorage.setItem(MOT_KEY,e.target.checked?"1":"0")}catch(_){}e.target.checked?askMotion():stopMotion()};
+if(motionOn()){
+  if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){
+    const first=()=>{document.removeEventListener("touchend",first,true);document.removeEventListener("click",first,true);askMotion()};
+    document.addEventListener("touchend",first,true);document.addEventListener("click",first,true);
+  }else startMotion();
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)motBase=null});
+
 /* ---------- intro: si aprono le porte del supermercato (circa 1 secondo) ---------- */
 function playIntro(){
   if(RM||!cards.length)return;
