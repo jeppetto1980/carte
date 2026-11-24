@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <title>Card</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -2347,7 +2349,6 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     box-shadow:0 1px 2px rgba(20,25,50,.06),0 6px 12px -4px rgba(20,25,50,.10),0 22px 34px -14px rgba(20,25,60,.30),0 40px 60px -30px rgba(40,50,110,.22),inset 0 0 0 1px rgba(0,0,0,.04);transition:transform .18s cubic-bezier(.3,.7,.4,1.4);will-change:transform;transform-style:preserve-3d}
   .grid .card{animation:float 6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -0.7s)}
   @keyframes float{0%,100%{translate:0 0}50%{translate:0 -3px}}
-  .grid .card:active{transform:scale(.95)}
   @media(prefers-reduced-motion:reduce){.grid .card{animation:none}}
   .card::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
     background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 32%,transparent 50%,rgba(0,0,0,.10) 100%)}
@@ -2356,7 +2357,13 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .card.ft{padding:0}
   .card .full{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .card.ft .ini,.card.ft .nm{display:none}
+  .card.ft .ring,.card.ft .wm,.card.hl .wm{display:none}
   .card.hl .ini{visibility:hidden}
+  .card::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .2s;
+    background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.5),rgba(255,255,255,0) 55%)}
+  .card.tilt::after{opacity:1}
+  .card .wm{position:absolute;right:-4px;bottom:-22px;font-size:96px;font-weight:900;letter-spacing:-5px;line-height:1;opacity:.16;z-index:1;pointer-events:none}
+  .card .ring{position:absolute;width:140%;aspect-ratio:1;left:-60%;top:-95%;border-radius:50%;border:22px solid rgba(255,255,255,.08);z-index:1;pointer-events:none}
   .card .nm{position:relative;z-index:2;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .empty{text-align:center;color:var(--muted);padding:70px 20px}
   .empty b{display:block;color:var(--fg);font-size:19px;margin-bottom:6px}
@@ -2375,7 +2382,10 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .face{position:absolute;inset:0;border-radius:20px;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;
     box-shadow:0 2px 4px rgba(20,25,50,.06),0 30px 60px -18px rgba(20,25,70,.40),0 60px 100px -40px rgba(40,50,120,.30)}
   .face.front{aspect-ratio:auto}
-  .face.back{transform:rotateY(180deg);background:#fff;border:1px solid rgba(0,0,0,.05);color:#111;display:flex;flex-direction:column;padding:5.5% 6.5% 4.5%}
+  .face.back{transform:rotateY(180deg);background:#fff;border:1px solid rgba(0,0,0,.05);color:#111;display:flex;flex-direction:column;padding:0 6.5% 4.5%}
+  .bhead{display:flex;align-items:center;gap:10px;margin:0 -7% 0;padding:3.6% 7%;font-weight:800;font-size:16px;letter-spacing:-.2px;min-height:21%}
+  .bhead img{height:30px;aspect-ratio:1.586;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .bhead span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sheen{position:absolute;inset:0;z-index:4;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 66%);transform:translateX(-120%)}
   .bname{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.2px}
   .bname i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto}
@@ -2384,7 +2394,9 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   #code.qr svg{width:auto;height:100%;aspect-ratio:1}
   #code .msg{font-size:14px;color:#666;text-align:center}
   #num{font:700 17px/1.2 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:2.5px;text-align:center;word-break:break-all;cursor:pointer}
-  .actions{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 26px);display:flex;justify-content:center;gap:12px;opacity:0}
+  .actions{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 26px);display:flex;justify-content:center;align-items:center;gap:12px;opacity:0}
+  .actions .ic{width:52px;height:52px;padding:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:10px;gap:2px}
+  .actions .ic svg{width:22px;height:22px}
   .actions button{padding:13px 22px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(20,22,40,.08);box-shadow:0 8px 20px -8px rgba(20,25,60,.3);font-weight:650;font-size:15px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
   .actions button.pri2{background:#14161c;color:#fff}
   .tip{position:fixed;left:0;right:0;text-align:center;font-size:13px;color:#7a7f8c;opacity:0}
@@ -2435,6 +2447,84 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .nr .bc svg{height:34px;width:120px;flex:0 0 auto}
   .nr .bc span{font:600 14px ui-monospace,Menlo,monospace;letter-spacing:1px;word-break:break-all}
   .err{color:var(--danger);font-size:13px;margin-top:6px;min-height:16px}
+  /* modalità cassa */
+  #big{background:#fff;z-index:40;align-items:center;justify-content:center;color:#111}
+  #bigrot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vmin;transform-origin:center}
+  #bigcode{display:flex;align-items:center;justify-content:center}
+  #bigcode svg{width:100%;height:100%;display:block}
+  #bignum{font:700 5vmin/1.1 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.5vmin}
+  #bigname{font-weight:800;font-size:3.6vmin;color:#555}
+  .bighint{position:fixed;bottom:calc(var(--safe-b) + 14px);left:0;right:0;text-align:center;font-size:13px;color:#999}
+  /* toast + coriandoli */
+  #toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 100px);transform:translate(-50%,20px);padding:12px 18px;border-radius:999px;background:#14161c;color:#fff;font-weight:650;font-size:15px;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.2,.9,.3,1.3);z-index:60;white-space:nowrap;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+  #toast.on{opacity:1;transform:translate(-50%,0)}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:55}
+  /* barra avanzamento import */
+  .pbar{height:6px;border-radius:3px;background:rgba(120,130,160,.18);overflow:hidden;margin:0 0 10px}
+  .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;border-radius:3px}
+  /* card ricevuta */
+  #recv .card{width:min(320px,80vw);margin:6px auto 14px;pointer-events:none}
+  .rnum{text-align:center;font:600 16px ui-monospace,Menlo,monospace;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;word-break:break-all}
+  .pastebox{display:none;gap:8px;margin-top:8px}
+  .pastebox.on{display:flex}
+  .pastebox .in{font-size:15px}
+  .pastebox button{padding:0 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700}
+  /* benvenuto */
+  #welcome{z-index:15;justify-content:space-between;padding:calc(var(--safe-t) + 30px) 22px calc(var(--safe-b) + 22px);overflow:auto;
+    background:radial-gradient(120% 70% at 20% 0%,#ffe7cf 0%,rgba(255,231,207,0) 60%),radial-gradient(100% 60% at 100% 30%,#e3e6ff 0%,rgba(227,230,255,0) 60%),linear-gradient(180deg,#fff,#f1f2f6)}
+  .wtop{text-align:center}
+  .fan{position:relative;height:230px;margin:0 auto 14px;width:280px}
+  .fan i{position:absolute;left:50%;top:50%;width:136px;height:182px;margin:-96px 0 0 -68px;border-radius:22px;box-shadow:0 20px 40px -14px rgba(60,30,10,.45),inset 0 0 0 1px rgba(255,255,255,.3);
+    background-image:linear-gradient(135deg,rgba(255,255,255,.45),rgba(255,255,255,0) 45%)}
+  .fan .f1{background-color:#2f6cf5;transform:rotate(-16deg) translateX(-62px);animation:fanL 1s cubic-bezier(.2,.9,.3,1.2) both}
+  .fan .f3{background-color:#ffc400;transform:rotate(16deg) translateX(62px);animation:fanR 1s cubic-bezier(.2,.9,.3,1.2) both}
+  .fan .f2{background-color:#ff5f50;transform:translateY(-6px);animation:fanC 1s cubic-bezier(.2,.9,.3,1.2) both,bob 4s 1s ease-in-out infinite}
+  .fan .f2::after{content:"";position:absolute;left:18px;right:18px;bottom:26px;height:46px;border-radius:8px;background:repeating-linear-gradient(90deg,#fff 0 3px,transparent 3px 6px,#fff 6px 7px,transparent 7px 11px);opacity:.9}
+  @keyframes fanL{from{transform:rotate(0) translateX(0);opacity:0}}
+  @keyframes fanR{from{transform:rotate(0) translateX(0);opacity:0}}
+  @keyframes fanC{from{transform:translateY(40px) scale(.9);opacity:0}}
+  @keyframes bob{0%,100%{transform:translateY(-6px)}50%{transform:translateY(-14px)}}
+  #welcome h2{font-size:34px;line-height:1.08;letter-spacing:-1px;margin:0 0 10px;font-weight:850}
+  #welcome p{color:var(--muted);font-size:16px;margin:0 auto;max-width:320px;line-height:1.45}
+  .wbtns{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+  .wb{width:100%;padding:16px 18px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 20px -14px rgba(20,25,60,.35);text-align:left;font-size:16px;display:flex;flex-direction:column;gap:2px}
+  .wb span{font-size:13px;color:var(--muted);font-weight:500}
+  .wb.pri{background:linear-gradient(135deg,#ff7a45,#ff4f7a);color:#fff;border:0;box-shadow:0 14px 30px -12px rgba(255,80,90,.7)}
+  .wb.pri span{color:rgba(255,255,255,.85)}
+  .wrow{display:flex;gap:10px}
+  .wb.sm{font-size:14px;font-weight:650;padding:14px;text-align:center;align-items:center}
+  .steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+  .steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;font-size:15px;line-height:1.4}
+  .steps li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff7a45,#ff4f7a);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+  @media(prefers-reduced-motion:reduce){.fan i{animation:none!important}}
+  /* tema scuro automatico */
+  @media (prefers-color-scheme: dark){
+    :root{--fg:#f2f3f7;--muted:#9097a5;--line:rgba(255,255,255,.09);--field:rgba(255,255,255,.06)}
+    html{background:#0b0c10}
+    body{background:linear-gradient(180deg,#161922 0%,#0f1117 45%,#0b0c10 100%) fixed;background-color:#0b0c10}
+    body::before{background:radial-gradient(120% 60% at 50% 0%,rgba(120,120,255,.12),rgba(0,0,0,0) 65%)}
+    h1{background:linear-gradient(90deg,#fff,#c9d4ff 60%,#dccbff);-webkit-background-clip:text;background-clip:text}
+    #search{background-color:rgba(255,255,255,.06);box-shadow:none}
+    .card{box-shadow:0 1px 2px rgba(0,0,0,.5),0 10px 20px -6px rgba(0,0,0,.55),0 30px 44px -18px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.07)}
+    #bd{background:rgba(8,9,13,.74)}
+    .face{box-shadow:0 30px 70px -18px rgba(0,0,0,.85)}
+    .sheet{background:#181b22;border-top-color:rgba(255,255,255,.06)}
+    .sheet::before{background:rgba(255,255,255,.22)}
+    .in,select{background:#23262f}
+    .scan{color:#d2dcff;background:linear-gradient(135deg,rgba(91,140,255,.2),rgba(154,107,255,.2))}
+    .bulk{color:#a6efd6;background:linear-gradient(135deg,rgba(0,190,140,.18),rgba(0,150,200,.15))}
+    .sw.sel{border-color:#fff}
+    .actions button{background:rgba(38,42,52,.92);color:#fff;border-color:rgba(255,255,255,.1)}
+    .actions button.pri2{background:#fff;color:#111}
+    .tip{color:#9097a5}
+    .banner{background:#2a2112;border-color:#5a4210;color:#ffd08a}
+    .imgrow img,.imgrow button{background:#23262f}
+    .link{color:#a9b9ff}
+    #toast{background:#fff;color:#111}
+    #welcome{background:radial-gradient(120% 70% at 20% 0%,rgba(255,120,60,.22) 0%,rgba(0,0,0,0) 60%),radial-gradient(100% 60% at 100% 30%,rgba(110,110,255,.22) 0%,rgba(0,0,0,0) 60%),linear-gradient(180deg,#14161d,#0b0c10)}
+    .wb,.steps li{background:#1b1e26}
+    .rv img{background:#23262f}
+  }
 </style>
 </head>
 <body>
@@ -2448,7 +2538,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
 <div id="gtop" class="grid"></div>
 <div class="sec" id="secAll" style="display:none">Tutte</div>
 <div id="grid" class="grid"></div>
-<div id="empty" class="empty" style="display:none"><b>Nessuna card</b>Tocca + per aggiungere la prima.<br>Puoi fotografare il codice a barre<br>o importare gli screenshot da Klarna.</div>
+<div id="empty" class="empty" style="display:none"><b>Nessuna card</b>Tocca + per aggiungere la prima.</div>
 <button class="fab" id="add" aria-label="Aggiungi card">+</button>
 
 <!-- Vista card con flip -->
@@ -2456,11 +2546,11 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   <div id="bd"></div>
   <div id="fwrap"><div id="flip">
     <div class="face front" id="ffront"></div>
-    <div class="face back"><div class="bname"><i id="bdot"></i><span id="sname"></span></div><div id="code"></div><div id="num"></div></div>
+    <div class="face back"><div class="bhead" id="bhead"><img id="blogo" alt=""><span id="sname"></span></div><div id="code"></div><div id="num"></div></div>
   </div></div>
-  <div class="tip" id="tip">Tocca il numero per copiarlo · alza la luminosità se non legge</div>
+  <div class="tip" id="tip">Tocca il codice per ingrandirlo · il numero per copiarlo</div>
   <div id="copyok">Numero copiato</div>
-  <div class="actions" id="actions"><button id="editbtn">Modifica</button><button id="close" class="pri2">Chiudi</button></div>
+  <div class="actions" id="actions"><button id="sharebtn" class="ic" aria-label="Condividi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button id="bigbtn" class="ic" aria-label="Ingrandisci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="editbtn" class="ic" aria-label="Modifica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button><button id="close" class="pri2">Chiudi</button></div>
 </div>
 <!-- Aggiungi / modifica -->
 <div id="edit" class="ov">
@@ -2471,6 +2561,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <input id="photo" type="file" accept="image/*" hidden>
     <div id="scanmsg"></div>
     <button class="scan bulk" id="bulkbtn">🖼️ Importa più card da screenshot</button>
+    <button class="link" id="pastebtn">📋 Incolla una card ricevuta</button>
+    <div class="pastebox" id="pastebox"><input class="in" id="pastein" placeholder="Incolla qui il link ricevuto"><button id="pasteok">OK</button></div>
     <input id="shots" type="file" accept="image/*" multiple hidden>
     <label for="fname">Negozio</label>
     <input class="in" id="fname" placeholder="Es. Esselunga" autocomplete="off" list="stores">
@@ -2532,11 +2624,54 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   </div>
 </div>
 
+<!-- Modalità cassa -->
+<div id="big" class="ov"><div id="bigrot"><div id="bigcode"></div><div id="bignum"></div><div id="bigname"></div></div><div class="bighint">Tocca per chiudere · alza la luminosità se il lettore non legge</div></div>
+
+<!-- Card ricevuta -->
+<div id="recv" class="ov" style="background:rgba(20,22,40,.28);justify-content:flex-end">
+  <div class="sheet">
+    <h3><span>Ti hanno mandato una card</span><button id="rclose">Annulla</button></h3>
+    <div id="rcard" class="card"></div>
+    <div class="rnum" id="rnum"></div>
+    <p class="note" id="rnote" style="text-align:center"></p>
+    <div class="row"><button class="btn pri" id="raccept">Aggiungi alle mie card</button></div>
+    <button class="link" id="rcopy" style="display:none">Copia per l'app sulla Home</button>
+  </div>
+</div>
+
+<!-- Benvenuto -->
+<div id="welcome" class="ov">
+  <div class="wtop">
+    <div class="fan"><i class="f1"></i><i class="f2"></i><i class="f3"></i></div>
+    <h2>Tutte le tue carte,<br>subito.</h2>
+    <p>Apri l'app e sei già alla cassa. Niente pubblicità, niente menu inutili.</p>
+  </div>
+  <div class="wbtns" id="wmain">
+    <button class="wb pri" id="wklarna"><b>Arrivo da Klarna</b><span>Importa tutte le card dagli screenshot in un colpo</span></button>
+    <button class="wb" id="wscan"><b>📷 Inquadra una card</b><span>Punta la fotocamera sul codice a barre</span></button>
+    <div class="wrow"><button class="wb sm" id="wbackup">Ho un backup</button><button class="wb sm" id="wpaste">Mi hanno mandato una card</button></div>
+    <button class="link" id="wskip">Inizia senza card</button>
+  </div>
+  <div class="wbtns" id="wguide" style="display:none">
+    <ol class="steps">
+      <li><span><b>Apri Klarna</b> e tocca una carta fedeltà, così si vede il codice a barre.</span></li>
+      <li><span><b>Fai uno screenshot</b> (tasto laterale + volume su). Ripeti per ogni card.</span></li>
+      <li><span><b>Torna qui</b> e seleziona tutti gli screenshot: nome e codice li legge l'app.</span></li>
+    </ol>
+    <button class="wb pri" id="wpick"><b>Scegli gli screenshot</b><span>Puoi selezionarli tutti insieme</span></button>
+    <button class="link" id="wback">Indietro</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<canvas id="confetti" width="0" height="0"></canvas>
+
 <!-- Revisione import -->
 <div id="review" class="ov" style="background:rgba(0,0,0,.6);justify-content:flex-end">
   <div class="sheet">
     <h3><span>Controlla le card</span><button id="rcancel">Annulla</button></h3>
     <div id="bprog"></div>
+    <div class="pbar"><i id="pfill"></i></div>
     <div id="rlist"></div>
     <div class="row"><button class="btn pri" id="rsave" disabled>Salva le card selezionate</button></div>
   </div>
@@ -2571,9 +2706,13 @@ function persist(c,remove){
 /* ---------- griglia con animazioni ---------- */
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const els=new Map(); let openId=null, busy=false;
+function shade(h,p){const n=parseInt((h||"#1e88e5").slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;
+  const t=p<0?0:255,a=Math.abs(p);r=Math.round(r+(t-r)*a);g=Math.round(g+(t-g)*a);b=Math.round(b+(t-b)*a);return `rgb(${r},${g},${b})`}
 function fillFace(el,c){
-  el.style.background=c.color||COLORS[4];el.style.color=lightColor(c.color)?"#111":"#fff";
-  el.innerHTML='<span class="ini"></span><span class="nm"></span>';
+  const col=c.color||COLORS[4];
+  el.style.background=`linear-gradient(135deg,${shade(col,.16)},${col} 45%,${shade(col,-.28)})`;el.style.color=lightColor(col)?"#111":"#fff";
+  el.innerHTML='<span class="ring"></span><span class="wm"></span><span class="ini"></span><span class="nm"></span>';
+  el.querySelector(".wm").textContent=isUnnamed(c)?"?":c.name.trim().slice(0,2).toUpperCase();
   el.querySelector(".ini").textContent=isUnnamed(c)?"?":c.name.trim().slice(0,2).toUpperCase();
   el.querySelector(".nm").textContent=isUnnamed(c)?"Senza nome":c.name;
   el.classList.remove("ft","hl");
@@ -2585,7 +2724,7 @@ function tileFor(c){
   const sig=JSON.stringify([c.name,c.color,c.logo,c.logoManual]);let b=els.get(c.id);
   if(b&&b._sig===sig)return b;
   const nb=document.createElement("button");nb.className="card";nb.dataset.id=c.id;nb.setAttribute("aria-label",c.name||"card");
-  fillFace(nb,c);nb._sig=sig;nb._new=!b;nb.onclick=()=>openCard(c.id);
+  fillFace(nb,c);nb._sig=sig;nb._new=!b;nb.onclick=()=>openCard(c.id);attachTilt(nb);
   if(b){if(b.isConnected)b.replaceWith(nb);nb._new=false;nb._pop=true}
   els.set(c.id,nb);return nb;
 }
@@ -2607,7 +2746,7 @@ function render(opts={}){
   $("empty").style.display=cards.length?"none":"block";
   const un=cards.filter(isUnnamed).length;
   $("unnamed").style.display=un?"flex":"none";$("unnamed").innerHTML=un?`${un} card senza nome<b>Dai un nome</b>`:"";
-  $("count").textContent=cards.length?cards.length+(cards.length===1?" carta":" carte"):"";
+  $("count").textContent=greet()+(cards.length?" · "+cards.length+(cards.length===1?" carta":" carte"):"");
   if(RM)return;
   const fresh=[];
   vis.forEach(id=>{const e=els.get(id);
@@ -2620,6 +2759,17 @@ function render(opts={}){
   if(opts.quick)fresh.forEach(e=>e.animate([{opacity:0,transform:"scale(.9)"},{opacity:1,transform:"none"}],{duration:260,easing:"ease-out"}));
   else deal(fresh);
 }
+function attachTilt(el){
+  if(RM)return;
+  const set=e=>{const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform=`perspective(700px) rotateX(${(-y*16).toFixed(2)}deg) rotateY(${(x*18).toFixed(2)}deg) scale(.96)`;
+    el.style.setProperty("--gx",((x+.5)*100).toFixed(1)+"%");el.style.setProperty("--gy",((y+.5)*100).toFixed(1)+"%");el.classList.add("tilt")};
+  const off=()=>{el.classList.remove("tilt");el.style.transform=""};
+  el.addEventListener("pointerdown",set);
+  el.addEventListener("pointermove",e=>{if(el.classList.contains("tilt"))set(e)});
+  ["pointerup","pointerleave","pointercancel"].forEach(t=>el.addEventListener(t,off));
+}
+function greet(){const h=new Date().getHours();return h<6?"Buonanotte":h<13?"Buongiorno":h<18?"Buon pomeriggio":"Buonasera"}
 function deal(list){
   if(RM||!list.length)return;
   const vw=innerWidth,vh=innerHeight,step=Math.min(60,900/list.length);
@@ -2655,7 +2805,11 @@ async function openCard(id){
   const fw=$("fwrap");Object.assign(fw.style,{left:T.left+"px",top:T.top+"px",width:T.width+"px",height:T.height+"px"});
   const front=$("ffront");front.className="face front card";fillFace(front,c);
   const sh=document.createElement("div");sh.className="sheen";front.appendChild(sh);
-  $("sname").textContent=c.name;$("bdot").style.background=c.color||COLORS[4];$("num").textContent=c.number;
+  $("sname").textContent=c.name;$("num").textContent=c.number;
+  const col=c.color||COLORS[4],lt=c.logoManual?c.logo:(libTile(c.name)||c.logo);
+  $("bhead").style.background=`linear-gradient(135deg,${shade(col,.12)},${shade(col,-.2)})`;$("bhead").style.color=lightColor(col)?"#111":"#fff";
+  $("blogo").style.display=lt?"block":"none";if(lt)$("blogo").src=lt;
+  keepAwake(true);
   $("stage").classList.add("on");drawCode(c);
   $("tip").style.top=(T.top+T.height+22)+"px";$("copyok").style.top=(T.top-46)+"px";
   tile.style.visibility="hidden";
@@ -2689,13 +2843,111 @@ async function closeCard(fast){
   fw.getAnimations().forEach(a=>a.cancel());$("flip").getAnimations().forEach(a=>a.cancel());
   ["bd","actions","tip"].forEach(k=>$(k).getAnimations().forEach(a=>a.cancel()));
   if(tile)tile.style.visibility="";
-  openId=null;busy=false;
+  openId=null;busy=false;keepAwake(false);
   const c=cards.find(x=>x.id===id);if(c)persist({...c,uses:(c.uses||0)+1,last:Date.now()});
 }
 $("close").onclick=()=>closeCard();
 $("bd").onclick=()=>closeCard();
 $("num").onclick=async()=>{try{await navigator.clipboard.writeText(current.number);const t=$("copyok");t.style.opacity=1;setTimeout(()=>t.style.opacity=0,1300)}catch(e){}};
 $("editbtn").onclick=async()=>{const c=current;await closeCard(true);openEdit(cards.find(x=>x.id===c.id)||c)};
+
+/* ---------- modalità cassa: codice enorme, schermo sempre acceso ---------- */
+let wl=null;
+async function keepAwake(on){try{if(on&&"wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>wl=null)}else if(!on&&wl){await wl.release();wl=null}}catch(_){}}
+function openBig(){
+  const c=current;if(!c)return;const fmt=resolveFmt(c.number,c.format),W=innerWidth,H=innerHeight;
+  const rot=$("bigrot"),box=$("bigcode");box.innerHTML="";
+  $("bignum").textContent=c.number;$("bigname").textContent=c.name;
+  if(fmt==="QR"){
+    Object.assign(rot.style,{width:W+"px",height:H+"px",transform:"none"});
+    const s=Math.min(W,H)*.8;Object.assign(box.style,{width:s+"px",height:s+"px"});
+    if(typeof qrcode==="function"){const q=qrcode(0,"M");q.addData(c.number);q.make();box.innerHTML=q.createSvgTag({cellSize:8,margin:2,scalable:true})}
+  }else{
+    // ruotato in orizzontale: il codice a barre diventa lungo quanto l'altezza del telefono
+    Object.assign(rot.style,{width:H+"px",height:W+"px",transform:"rotate(90deg)"});
+    Object.assign(box.style,{width:(H*.86)+"px",height:(W*.5)+"px"});
+    const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");box.appendChild(svg);
+    try{JsBarcode(svg,c.number,{format:fmt,displayValue:false,margin:0,height:100,width:3,background:"#fff"})}catch(e){try{JsBarcode(svg,c.number,{format:"CODE128",displayValue:false,margin:0,height:100,width:3})}catch(_){}}
+    const w=svg.getAttribute("width"),h=svg.getAttribute("height");
+    if(w&&h){svg.setAttribute("viewBox",`0 0 ${parseFloat(w)} ${parseFloat(h)}`);svg.removeAttribute("width");svg.removeAttribute("height");svg.setAttribute("preserveAspectRatio","none")}
+  }
+  $("big").classList.add("on");keepAwake(true);
+  if(!RM)$("big").animate([{opacity:0,transform:"scale(1.04)"},{opacity:1,transform:"none"}],{duration:260,easing:"ease-out"});
+}
+$("bigbtn").onclick=openBig;
+$("code").onclick=openBig;
+$("big").onclick=()=>{$("big").classList.remove("on")};
+
+/* ---------- toast e coriandoli ---------- */
+let toastT;
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200)}
+function confetti(n=140){
+  if(RM)return;const cv=$("confetti"),g=cv.getContext("2d"),dpr=devicePixelRatio||1;
+  cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;g.scale(dpr,dpr);
+  const cols=["#ff5f50","#ffc400","#2f6cf5","#00c896","#9a6bff","#ff7ab6"];
+  const P=Array.from({length:n},()=>({x:innerWidth/2+(Math.random()-.5)*60,y:innerHeight*.35,vx:(Math.random()-.5)*13,vy:-Math.random()*13-5,
+    s:5+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.random()*cols.length|0]}));
+  const t0=performance.now();
+  (function f(t){const k=(t-t0)/1600;g.clearRect(0,0,innerWidth,innerHeight);
+    P.forEach(p=>{p.vy+=.38;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.globalAlpha=Math.max(0,1-k);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);g.restore()});
+    if(k<1)requestAnimationFrame(f);else g.clearRect(0,0,innerWidth,innerHeight)})(t0);
+}
+
+/* ---------- condividi una card ---------- */
+const newId=()=>"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function b64e(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+function b64d(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return decodeURIComponent(escape(atob(s)))}
+function shareLink(c){return location.origin+location.pathname+"#add="+b64e(JSON.stringify({n:c.name,v:c.number,f:c.format||"auto",c:c.color}))}
+function parseShared(str){
+  const m=(str||"").match(/#add=([A-Za-z0-9_-]+)/);if(!m)return null;
+  try{const o=JSON.parse(b64d(m[1]));if(o&&o.v&&o.n)return {name:String(o.n).slice(0,60),number:String(o.v).replace(/\s+/g,"").slice(0,80),format:String(o.f||"auto"),color:/^#[0-9a-f]{6}$/i.test(o.c)?o.c:COLORS[4]}}catch(_){}
+  return null;
+}
+$("sharebtn").onclick=async()=>{
+  const c=current;if(!c)return;const url=shareLink(c);const text=`Ti mando la mia card ${c.name} 💳 Aprila per aggiungerla a "Le mie card":`;
+  try{if(navigator.share){await navigator.share({title:"Card "+c.name,text,url});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(text+" "+url);toast("Link copiato ✓")}catch(_){toast("Condivisione non disponibile")}
+};
+let pendingShared=null;
+const isIOSBrowser=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!navigator.standalone;
+function showRecv(sc){
+  pendingShared=sc;const rc=$("rcard");rc.className="card";fillFace(rc,sc);
+  $("rnum").textContent=sc.number;
+  const dup=cards.some(x=>x.number===sc.number);
+  $("raccept").textContent=dup?"Aggiungi comunque":"Aggiungi alle mie card";
+  $("rnote").textContent=dup?"Hai già una card con questo numero.":(isIOSBrowser?"Hai già l'app sulla Home? Tocca «Copia per l'app», poi aprila: + → «Incolla una card ricevuta».":"");
+  $("rcopy").style.display=isIOSBrowser?"block":"none";
+  $("welcome").classList.remove("on");$("edit").classList.remove("on");$("recv").classList.add("on");
+}
+$("rclose").onclick=()=>{$("recv").classList.remove("on");pendingShared=null;checkWelcome()};
+$("raccept").onclick=()=>{if(!pendingShared)return;persist({...pendingShared,id:newId(),uses:0});$("recv").classList.remove("on");pendingShared=null;toast("Card aggiunta ✓");confetti(90)};
+$("rcopy").onclick=async()=>{try{await navigator.clipboard.writeText(shareLink(pendingShared));toast("Copiata: aprila nell'app")}catch(_){toast("Non riesco a copiare")}};
+async function pasteShared(){
+  try{const t=await navigator.clipboard.readText();const sc=parseShared(t);if(sc){showRecv(sc);return}}catch(_){}
+  // nessun link negli appunti: apro il riquadro per incollarlo a mano (sopra la schermata di benvenuto)
+  $("welcome").classList.remove("on");openEdit(null);$("pastebox").classList.add("on");
+  $("scanmsg").textContent="Incolla qui sotto il link della card che ti hanno mandato.";
+  setTimeout(()=>{try{$("pastein").focus();$("pastebox").scrollIntoView({block:"center"})}catch(_){}},350);
+}
+$("pastebtn").onclick=pasteShared;
+$("pasteok").onclick=()=>{const sc=parseShared($("pastein").value);if(sc){$("pastein").value="";$("pastebox").classList.remove("on");showRecv(sc)}else toast("Link non valido")};
+function handleHash(){if(location.hash.startsWith("#add=")){const sc=parseShared(location.hash);history.replaceState(null,"",location.pathname);if(sc)showRecv(sc)}}
+addEventListener("hashchange",handleHash);
+
+/* ---------- benvenuto ---------- */
+function checkWelcome(){
+  let skip=false;try{skip=sessionStorage.getItem("skipWelcome")==="1"}catch(_){}
+  const show=!cards.length&&!skip&&!$("recv").classList.contains("on")&&!$("review").classList.contains("on");
+  $("welcome").classList.toggle("on",show);
+  if(show){$("wmain").style.display="flex";$("wguide").style.display="none"}
+}
+$("wklarna").onclick=()=>{$("wmain").style.display="none";$("wguide").style.display="flex"};
+$("wback").onclick=()=>{$("wguide").style.display="none";$("wmain").style.display="flex"};
+$("wpick").onclick=()=>$("shots").click();
+$("wscan").onclick=()=>{$("welcome").classList.remove("on");openEdit(null);$("scanbtn").onclick()};
+$("wbackup").onclick=()=>$("bkfile").click();
+$("wpaste").onclick=pasteShared;
+$("wskip").onclick=()=>{try{sessionStorage.setItem("skipWelcome","1")}catch(_){}$("welcome").classList.remove("on")};
 
 function resolveFmt(num,fmt){
   if(fmt&&fmt!=="auto")return fmt;
@@ -2728,7 +2980,7 @@ function openEdit(c){
   $("etitle").textContent=c?"Modifica card":"Nuova card";
   $("fname").value=c?.name||"";$("fnum").value=c?.number||"";$("ffmt").value=c?.format||"auto";
   pickColor=c?.color||COLORS[cards.length%COLORS.length];drawColors();setLogo(c?.logo||null);manualLogo=!!c?.logoManual;
-  $("fdel").style.display=c?"block":"none";$("bulkbtn").style.display=c?"none":"flex";$("ferr").textContent="";$("scanmsg").textContent="";
+  $("fdel").style.display=c?"block":"none";$("bulkbtn").style.display=c?"none":"flex";$("pastebtn").style.display=c?"none":"block";$("pastebox").classList.remove("on");$("ferr").textContent="";$("scanmsg").textContent="";
   $("edit").classList.add("on");
 }
 function drawColors(){
@@ -2736,19 +2988,19 @@ function drawColors(){
   COLORS.forEach(col=>{const s=document.createElement("button");s.className="sw"+(col===pickColor?" sel":"");s.style.background=col;s.setAttribute("aria-label","colore");s.onclick=()=>{pickColor=col;drawColors()};$("colors").appendChild(s)});
 }
 $("add").onclick=()=>openEdit(null);
-$("cancel").onclick=()=>$("edit").classList.remove("on");
+$("cancel").onclick=()=>{$("edit").classList.remove("on");checkWelcome()};
 $("edit").onclick=e=>{if(e.target.id==="edit")$("edit").classList.remove("on")};
 $("fsave").onclick=()=>{
   const name=$("fname").value.trim(),number=$("fnum").value.replace(/\s+/g,"").trim(),format=$("ffmt").value;
   if(!name){$("ferr").textContent="Inserisci il nome del negozio";return}
   if(!number){$("ferr").textContent="Inserisci il numero della carta";return}
   const c={...(editing||{}),id:editing?.id||("c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),name,number,format,color:pickColor,logo:pickLogo||null,logoManual:!!(pickLogo&&manualLogo),uses:editing?.uses||0};
-  persist(c);$("edit").classList.remove("on");
+  persist(c);$("edit").classList.remove("on");if(!editing){toast("Card aggiunta ✓");confetti(70)}
 };
 let delArmed=false;
 $("fdel").onclick=()=>{
   if(!delArmed){delArmed=true;$("fdel").textContent="Conferma";setTimeout(()=>{delArmed=false;$("fdel").textContent="Elimina"},3000);return}
-  delArmed=false;$("fdel").textContent="Elimina";persist(editing,true);$("edit").classList.remove("on");
+  delArmed=false;$("fdel").textContent="Elimina";persist(editing,true);$("edit").classList.remove("on");checkWelcome();
 };
 
 /* ---------- lettura codici (offline, sul telefono) ---------- */
@@ -2866,11 +3118,6 @@ function binarize(bmp,sx,sy,sw,sh,targetH){
   g.putImageData(id,0,0);return {url:cv.toDataURL("image/png"),k,bg};
 }
 function px(bmp,x,y){const c=document.createElement("canvas");c.width=c.height=1;const g=c.getContext("2d");g.drawImage(bmp,x,y,1,1,0,0,1,1);return [...g.getImageData(0,0,1,1).data]}
-function wordsOf(data){
-  const out=[];
-  (data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach((l,li)=>(l.words||[]).forEach(w=>out.push({t:w.text,b:w.bbox,line:out.length?null:0,L:l})))));
-  return out;
-}
 async function readStoreName(file,onMsg){
   try{
     const w=await ensureOCR(onMsg);
@@ -2903,19 +3150,20 @@ async function readStoreName(file,onMsg){
 /* ---------- import multiplo da screenshot (es. da Klarna) ---------- */
 let batch=[], bulkAbort=false;
 $("bulkbtn").onclick=()=>$("shots").click();
-$("rcancel").onclick=()=>{bulkAbort=true;$("review").classList.remove("on")};
+$("rcancel").onclick=()=>{bulkAbort=true;$("review").classList.remove("on");checkWelcome()};
 $("shots").onchange=async e=>{
   const files=[...e.target.files];e.target.value="";if(!files.length)return;
-  $("edit").classList.remove("on");$("review").classList.add("on");
+  $("edit").classList.remove("on");$("welcome").classList.remove("on");$("review").classList.add("on");$("pfill").style.width="0%";
   batch=[];bulkAbort=false;$("rlist").innerHTML="";$("rsave").disabled=true;
   for(let i=0;i<files.length;i++){
     if(bulkAbort)return;
-    $("bprog").textContent=`Leggo ${i+1} di ${files.length}…`;
+    $("bprog").textContent=`Leggo ${i+1} di ${files.length}…`;$("pfill").style.width=(i/files.length*100)+"%";
     const f=files[i];const it={url:URL.createObjectURL(f),name:"",number:"",format:"auto",ok:true};
     const r=await decodeFile(f);if(r){it.number=r.number;it.format=r.format}
     it.name=await readStoreName(f,m=>$("bprog").textContent=m);
     batch.push(it);addRow(it);
   }
+  $("pfill").style.width="100%";
   const bad=batch.filter(b=>!b.number).length;
   const nn=batch.filter(b=>!b.name).length;
   $("bprog").textContent=`Fatto: ${batch.length-bad} codici letti`+(bad?`, ${bad} da scrivere a mano`:"")+(nn?`, ${nn} nomi da completare`:"")+". Controlla nomi e numeri prima di salvare."+(ocrError?` (Lettura nomi non riuscita: ${ocrError})`:"");
@@ -2934,12 +3182,16 @@ $("rsave").onclick=async()=>{
   const noName=batch.filter(b=>b.ok&&b.number&&!b.name.trim()).length;
   if(noName&&!rWarn){rWarn=true;$("bprog").textContent=`${noName} card senza nome: scrivilo per avere l'anteprima giusta. Tocca di nuovo "Salva" per salvare comunque.`;$("bprog").style.color="#c25400";return}
   rWarn=false;$("bprog").style.color="";
+  let added=0;
   for(const it of batch){
     if(!it.ok||!it.number)continue;
-    persist({id:"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:it.name.trim()||"",number:it.number,format:it.format,color:COLORS[cards.length%COLORS.length],uses:0});
+    if(cards.some(x=>x.number===it.number))continue; // già presente
+    cards.push({id:newId(),name:it.name.trim()||"",number:it.number,format:it.format,color:COLORS[cards.length%COLORS.length],uses:0});added++;
   }
+  saveCache();
   batch.forEach(b=>URL.revokeObjectURL(b.url));
-  $("review").classList.remove("on");
+  $("review").classList.remove("on");render();
+  if(added){toast(added===1?"1 card aggiunta ✓":`${added} card aggiunte ✓`);setTimeout(()=>confetti(),350)}else{toast("Nessuna card nuova");checkWelcome()}
 };
 
 /* ---------- dai un nome alle card ---------- */
@@ -2991,15 +3243,15 @@ $("bkfile").onchange=async e=>{
   const f=e.target.files[0];e.target.value="";if(!f)return;
   try{const j=JSON.parse(await f.text());const list=Array.isArray(j)?j:j.cards;if(!Array.isArray(list))throw 0;
     let n=0;for(const c of list){if(c&&c.number&&c.name){const ex=cards.findIndex(x=>x.id===c.id);ex>=0?cards[ex]=c:cards.push({...c,id:c.id||("c"+Date.now().toString(36)+n)});n++}}
-    saveCache();render();$("bkmsg").textContent=`Importate ${n} card ✓`;
+    saveCache();render();$("bkmsg").textContent=`Importate ${n} card ✓`;checkWelcome();if(n){toast(`${n} card importate ✓`);confetti()}
   }catch(_){$("bkmsg").textContent="File di backup non valido"}
 };
 
 /* ---------- app installabile ---------- */
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCard();stopCam();$("edit").classList.remove("on");$("menu").classList.remove("on")}});
-render();
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("big").classList.remove("on");closeCard();stopCam();$("edit").classList.remove("on");$("menu").classList.remove("on")}});
+render();checkWelcome();handleHash();
 </script>
 </body>
 </html>
