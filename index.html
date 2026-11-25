@@ -2708,7 +2708,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <button class="scan bulk" id="bkimp">⬇️ Importa backup</button>
     <input id="bkfile" type="file" accept="application/json,.json" hidden>
     <div id="bkmsg" class="note" style="margin-top:12px"></div>
-    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 18</p>
+    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 19</p>
   </div>
 </div>
 
@@ -2999,11 +2999,34 @@ function openBig(){
     if(w&&h){svg.setAttribute("viewBox",`0 0 ${parseFloat(w)} ${parseFloat(h)}`);svg.removeAttribute("width");svg.removeAttribute("height");svg.setAttribute("preserveAspectRatio","none")}
   }
   $("big").classList.add("on");keepAwake(true);
-  if(!RM)$("big").animate([{opacity:0,transform:"scale(1.04)"},{opacity:1,transform:"none"}],{duration:260,easing:"ease-out"});
+  if(RM)return;
+  // transizione: il codice "esce" dalla card, ruota e si allarga, mentre lo sfondo bianco si apre a cerchio dal codice
+  const cr=$("code").getBoundingClientRect(),cx=cr.left+cr.width/2,cy=cr.top+cr.height/2;
+  const isQR=fmt==="QR",finalRot=isQR?"":" rotate(90deg)";
+  const bw=parseFloat(box.style.width),sc=Math.max(.15,cr.width/bw);
+  bigAnim={cx,cy,sc,isQR};
+  $("big").animate([{clipPath:`circle(0px at ${cx}px ${cy}px)`},{clipPath:`circle(${Math.hypot(W,H)}px at ${cx}px ${cy}px)`}],{duration:520,easing:"cubic-bezier(.3,.7,.2,1)"});
+  rot.animate([
+    {transform:`translate(${cx-W/2}px,${cy-H/2}px) scale(${sc})`},
+    {transform:`translate(${(cx-W/2)*.25}px,${(cy-H/2)*.25}px) scale(${(sc+1)/2*1.04})${isQR?"":" rotate(70deg)"}`,offset:.6},
+    {transform:`translate(0,0) scale(1)${finalRot}`}
+  ],{duration:620,easing:"cubic-bezier(.22,.9,.25,1)"});
+  [$("bignum"),$("bigname")].forEach((el,i)=>el.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:300,delay:420+i*80,easing:"ease-out",fill:"backwards"}));
+  document.querySelector(".bighint").animate([{opacity:0},{opacity:1}],{duration:300,delay:600,fill:"backwards"});
+}
+let bigAnim=null,bigClosing=false;
+async function closeBig(){
+  if(!$("big").classList.contains("on")||bigClosing)return;
+  if(RM||!bigAnim){$("big").classList.remove("on");return}
+  bigClosing=true;const {cx,cy,sc,isQR}=bigAnim,W=innerWidth,H=innerHeight,rot=$("bigrot");
+  const a1=rot.animate([{transform:`translate(0,0) scale(1)${isQR?"":" rotate(90deg)"}`},{transform:`translate(${cx-W/2}px,${cy-H/2}px) scale(${sc})`}],{duration:380,easing:"cubic-bezier(.5,0,.3,1)",fill:"forwards"});
+  const a2=$("big").animate([{clipPath:`circle(${Math.hypot(W,H)}px at ${cx}px ${cy}px)`},{clipPath:`circle(0px at ${cx}px ${cy}px)`}],{duration:420,easing:"cubic-bezier(.6,0,.4,1)",fill:"forwards"});
+  await Promise.all([a1.finished,a2.finished]).catch(()=>{});
+  $("big").classList.remove("on");a1.cancel();a2.cancel();bigClosing=false;
 }
 $("bigbtn").onclick=openBig;
 $("code").onclick=openBig;
-$("big").onclick=()=>{$("big").classList.remove("on")};
+$("big").onclick=closeBig;
 
 /* ---------- toast e coriandoli ---------- */
 let toastT;
@@ -3377,7 +3400,7 @@ $("bkfile").onchange=async e=>{
 /* ---------- app installabile ---------- */
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("big").classList.remove("on");closeCard();stopCam();$("edit").classList.remove("on");$("menu").classList.remove("on")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("big").classList.contains("on")){closeBig();return}closeCard();stopCam();$("edit").classList.remove("on");$("menu").classList.remove("on")}});
 /* ---------- tema natalizio: attivo da solo dal 20 novembre al 7 gennaio, si può spegnere ---------- */
 const XMAS_KEY="xmasTheme";
 function inSeason(){const d=new Date(),m=d.getMonth()+1,g=d.getDate();return (m===11&&g>=20)||m===12||(m===1&&g<=7)}
