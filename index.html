@@ -2708,7 +2708,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
     <button class="scan bulk" id="bkimp">⬇️ Importa backup</button>
     <input id="bkfile" type="file" accept="application/json,.json" hidden>
     <div id="bkmsg" class="note" style="margin-top:12px"></div>
-    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 19</p>
+    <p class="note" style="text-align:center;margin-top:18px;opacity:.7">Le mie card · versione 20</p>
   </div>
 </div>
 
@@ -3515,14 +3515,14 @@ async function tfetch(url,ms,label){
 async function osmQuery(q){
   let last;
   for(const u of OSM_SERVERS){
-    try{return (await tfetch(u+"?data="+encodeURIComponent(q),15000,new URL(u).host)).elements||[]}catch(e){last=e}
+    try{return (await tfetch(u+"?data="+encodeURIComponent(q),u===OSM_SERVERS[0]?10000:7000,new URL(u).host)).elements||[]}catch(e){last=e}
   }
   throw last||new Error("OpenStreetMap non raggiungibile");
 }
 // seconda fonte, di solito molto più veloce: Photon (motore di ricerca su dati OpenStreetMap)
 async function photonQuery(la,lo,radKm){
   const base=`https://photon.komoot.io/reverse?lat=${la}&lon=${lo}&limit=30&radius=${radKm}`;
-  const one=async tag=>{const j=await tfetch(base+"&osm_tag="+tag,15000,"Photon");
+  const one=async tag=>{const j=await tfetch(base+"&osm_tag="+tag,10000,"Photon");
     return (j.features||[]).map(f=>({t:{name:f.properties?.name,brand:f.properties?.brand||f.properties?.extent&&undefined},la:f.geometry?.coordinates?.[1],lo:f.geometry?.coordinates?.[0]})).filter(e=>e.la!=null&&e.t.name)};
   const parts=await Promise.allSettled([one("shop"),one("amenity")]);
   const ok=parts.filter(p=>p.status==="fulfilled").flatMap(p=>p.value);
@@ -3530,16 +3530,19 @@ async function photonQuery(la,lo,radKm){
   return ok;
 }
 function getPos(high){return new Promise((ok,ko)=>navigator.geolocation.getCurrentPosition(ok,ko,{enableHighAccuracy:high,timeout:high?10000:8000,maximumAge:30000}))}
+let wantDiag=false;
 async function suggestNearby(manual){
-  if(nearBusy||!("geolocation" in navigator))return;
-  if(!cards.length){if(manual)setDiag("Non hai ancora card salvate.");return}
-  if(!manual&&!geoEnabled())return;nearBusy=true;
   if(manual)setDiag("Cerco la posizione…");
+  if(!("geolocation" in navigator)){if(manual)setDiag("Questo telefono non fornisce la posizione all'app.");return}
+  // una ricerca è già in corso (es. quella automatica all'apertura): mostro il suo risultato appena arriva
+  if(nearBusy){if(manual){wantDiag=true;setDiag("Sto già cercando i negozi qui intorno…")}return}
+  if(!cards.length){if(manual)setDiag("Non hai ancora card salvate.");return}
+  if(!manual&&!geoEnabled())return;nearBusy=true;if(manual)wantDiag=true;
   try{
     let pos;try{pos=await getPos(true)}catch(e){if(e&&e.code===1)throw e;pos=await getPos(false)}
     const {latitude:la,longitude:lo,accuracy:acc}=pos.coords;
     const rad=Math.round(Math.min(400,Math.max(150,(acc||100)*1.5)));
-    if(manual)setDiag(`Posizione trovata (precisione ±${Math.round(acc)} m). Cerco i negozi nel raggio di ${rad} m…`);
+    if(wantDiag)setDiag(`Posizione trovata (precisione ±${Math.round(acc)} m). Cerco i negozi nel raggio di ${rad} m…`);
     const key="osm3:"+la.toFixed(3)+","+lo.toFixed(3)+":"+rad;
     let list=null,src=[],errs=[];try{list=JSON.parse(sessionStorage.getItem(key))}catch(_){}
     if(!list){
@@ -3565,13 +3568,13 @@ async function suggestNearby(manual){
       geoDiag+=best?`\n✓ Card suggerita: ${best.c.name}`:"\nNessuno di questi è tra le tue card.";
     }
     if(best)showNear(best.c,best.d);
-    if(manual)setDiag(geoDiag);
+    if(wantDiag)setDiag(geoDiag);
   }catch(e){
     if(e&&e.code===1&&!manual){try{localStorage.setItem(GEO_KEY,"0")}catch(_){}$("geoOn").checked=false}
     geoDiag=e&&e.code===1?"Permesso posizione negato: abilitalo in Impostazioni iPhone → Privacy → Localizzazione → Siti web di Safari.":
       e&&e.code?"Non riesco a trovare la posizione (GPS non disponibile qui dentro?).":"Non riesco a contattare le mappe: "+(e&&e.message||e)+". Riprova tra poco.";
-    if(manual)setDiag(geoDiag);
-  }finally{nearBusy=false}
+    if(wantDiag)setDiag(geoDiag);
+  }finally{nearBusy=false;wantDiag=false}
 }
 function setDiag(t){$("geodiag").textContent=t}
 $("geotest").onclick=()=>{$("geoOn").checked=true;try{localStorage.setItem(GEO_KEY,"1")}catch(_){}suggestNearby(true)};
